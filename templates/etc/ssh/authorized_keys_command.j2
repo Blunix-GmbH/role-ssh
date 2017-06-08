@@ -1,0 +1,7 @@
+#!/bin/bash
+
+secret=$(cat /etc/ssh/ssh.secret)
+
+ldapsearch -xLLLD uid=sshd,ou=users,{{ slapd_basedn }} -w${secret} \
+    '(&(objectClass=posixAccount)(uid='"$1"'))' 'sshPublicKey' |\
+    sed -n '/^ /{H;d};/sshPublicKey:/x;$g;s/\n *//g;s/sshPublicKey: //gp'

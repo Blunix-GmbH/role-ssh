@@ -1,0 +1,16 @@
+---
+- name: copy ssh secret file
+  template:
+    src: etc/ssh/ssh.secret
+    dest: /etc/ssh/ssh.secret
+    owner: nobody
+    group: root
+    mode: 0640
+
+- name: copy authorized_keys_script
+  template:
+    src: etc/ssh/authorized_keys_command.j2
+    dest: /etc/ssh/authorized_keys_command
+    owner: root
+    group: root
+    mode: 0755

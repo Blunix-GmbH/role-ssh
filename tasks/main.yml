@@ -1,0 +1,6 @@
+---
+- include: ssh.yml
+  when: ssh_enabled
+  tags:
+    - ssh
+    - sshd

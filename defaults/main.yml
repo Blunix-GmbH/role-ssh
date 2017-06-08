@@ -1,0 +1,4 @@
+---
+ssh_enabled: yes
+ssh_keys: {}
+
