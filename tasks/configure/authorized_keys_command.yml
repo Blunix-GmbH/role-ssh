@@ -6,6 +6,7 @@
     owner: nobody
     group: root
     mode: 0640
+  when: ssh_use_ldap | default(False)
 
 - name: copy authorized_keys_script
   template:
@@ -14,3 +15,4 @@
     owner: root
     group: root
     mode: 0755
+  when: ssh_use_ldap | default(False)
