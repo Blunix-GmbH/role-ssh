@@ -42,7 +42,7 @@ AuthorizedKeysFile	.ssh/authorized_keys
 #AuthorizedPrincipalsFile none
 
 {% if ssh_sshd_config_authorized_keys_command is defined %}
-AuthorizedKeysCommand {{ ssh_sshd_config_authorized_keys_command | default('none') }}
+AuthorizedKeysCommand {{ ssh_sshd_config_authorized_keys_command }}
 AuthorizedKeysCommandUser {{ ssh_sshd_config_authorized_keys_command_user | default('nobody') }}
 {% endif %}
 
