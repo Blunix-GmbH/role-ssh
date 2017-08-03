@@ -29,7 +29,7 @@ Example Play
     ssh_sshd_config_challenge_response_authentication: 'no'
     ssh_sshd_config_use_pam: 'yes'
     ssh_sshd_config_use_dns: 'no'
-    ssh_sshd_config_authorized_keys_command: 'none'
+    ssh_sshd_config_authorized_keys_command: /etc/ssh/authorized_keys_command
     ssh_sshd_config_authorized_keys_command_user: nobody
     # Secured settings below
     ssh_sshd_config_log_level: INFO
