@@ -1,4 +1,4 @@
 ---
 ssh_enabled: yes
+ssh_ldap_key_auth: no
 ssh_keys: {}
-
