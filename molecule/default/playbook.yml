@@ -1,0 +1,21 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: False
+  tasks:
+    - name: Install python for Ansible
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      become: True
+      changed_when: False
+
+- name: Converge
+  hosts: all
+  become: yes
+  vars:
+    slapd_basedn: dc=example,dc=com
+    ssh_enabled: yes
+    ssh_ldap_key_auth: yes
+    ssh_listen_addresses:
+      - 0.0.0.0
+  roles:
+    - role: role-ssh
