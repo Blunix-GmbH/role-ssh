@@ -10,8 +10,12 @@ lint:
 platforms:
   - name: stretch
     box: bento/debian-9.0
+    groups:
+      - debian
   - name: xenial
     box: bento/ubuntu-16.04
+    groups:
+      - ubuntu
 provisioner:
   name: ansible
   connection_options:

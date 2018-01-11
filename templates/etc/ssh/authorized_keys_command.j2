@@ -1,7 +1,8 @@
 #!/bin/bash
 
-secret=$(cat /etc/ssh/ssh.secret)
+binddn="{{ ssh_ldap_binddn }}"
+bindpw=$(cat /etc/ssh/ssh.secret)
 
-ldapsearch -xLLLD uid=sshd,ou=users,{{ slapd_basedn }} -w${secret} \
-    '(&(objectClass=posixAccount)(uid='"$1"'))' 'sshPublicKey' |\
+ldapsearch -xLLLD ${binddn} -w${bindpw} \
+    "{{ ssh_ldap_filter }}" "sshPublicKey" |\
     sed -n '/^ /{H;d};/sshPublicKey:/x;$g;s/\n *//g;s/sshPublicKey: //gp'
