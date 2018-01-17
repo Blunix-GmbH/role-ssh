@@ -1,10 +1,8 @@
-Ansible Role SSH
-================
+# Ansible Role SSH
 
 This role installs and configures SSH server and client.
 
-Example Play
-============
+# Example Play
 
 ```yaml
 - hosts: foo
@@ -12,8 +10,10 @@ Example Play
     - blunix.role-ssh
   vars:
     ssh_enabled: yes
+
     # Setup asking ldap
     ssh_use_ldap: yes
+
     # sshd_config
     ssh_sshd_config_port: 22
     ssh_sshd_config_protocol_version: 2
@@ -31,6 +31,7 @@ Example Play
     ssh_sshd_config_use_dns: 'no'
     ssh_sshd_config_authorized_keys_command: /etc/ssh/authorized_keys_command
     ssh_sshd_config_authorized_keys_command_user: nobody
+
     # Secured settings below
     ssh_sshd_config_log_level: INFO
     ssh_sshd_config_permit_root_login: prohibit-password
@@ -39,33 +40,34 @@ Example Play
     ssh_sshd_gateway_ports: 'no'
     ssh_sshd_x11_forwarding: 'no'
     ssh_sshd_config_permit_tunnel: 'no'
-    # Whitespace seperated list of users / groups
+
+    # Explicitly state users and groups who have permission to login.
     ssh_sshd_config_allow_users: 'root'
     ssh_sshd_config_allow_groups: 'root'
+
     # Cipher Settings
     # shamelessly copied from https://wiki.mozilla.org/Security/Guidelines/OpenSSH#Modern_.28OpenSSH_6.7.2B.29
     # see also: bettercrypto.org
     ssh_sshd_config_kex_algorithms: 'curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256'
     ssh_sshd_config_ciphers: 'chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr'
     ssh_sshd_config_macs: 'hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com'
-    
 ```
 
-License
--------
+# License
 
-Apache
+Apache-2.0
 
-Author Information
-------------------
+# Author Information
 
-Service and support for orchestrated hosting environments, continuous integration/deployment/delivery and various Linux and open-source technology stacks are available from:
+Service and support for orchestrated hosting environments, continuous integration/deployment/delivery and various Linux
+and open-source technology stacks are available from:
 
 ```
-Blunix GmbH - Professional Linux Service
+Blunix GmbH - Consulting for Linux Hosting 24/7
 Glogauer Straße 21
 10999 Berlin - Germany
 
 Web: www.blunix.org
-Email: mailto:service@blunix.org
+Email: service[at]blunix.org
+Phone: (+49) 30 / 12 08 39 90
 ```
