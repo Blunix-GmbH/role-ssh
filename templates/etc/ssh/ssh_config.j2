@@ -1,0 +1,32 @@
+{{ ansible_managed | comment }}
+
+# This is the ssh client system-wide configuration file.  See
+# ssh_config(5) for more information.  This file provides defaults for
+# users, and the values can be changed in per-user configuration files
+# or on the command line.
+
+# Configuration data is parsed as follows:
+#  1. command line options
+#  2. user-specific file
+#  3. system-wide file
+# Any configuration value is only changed the first time it is set.
+# Thus, host-specific definitions should be at the beginning of the
+# configuration file, and defaults at the end.
+
+# Site-wide defaults for some commonly used options.  For a comprehensive
+# list of available options, their meanings and defaults, please see the
+# ssh_config(5) man page.
+
+{% for host in ssh_ssh_config | sort %}
+Host {{ host }}
+{% for key in ssh_ssh_config[host] | sort %}
+{# Ansible does not seem to provide a "is_list" filter (as saltstack does) #}
+{% if ssh_ssh_config[host][key] is sequence and ssh_ssh_config[host][key] is not string and ssh_ssh_config[host][key] is not mapping %}
+{% for item in ssh_ssh_config[host][key] | sort %}
+    {{ key }} {{ item }}
+{% endfor %}
+{% else %}
+    {{ key }} {{ ssh_ssh_config[host][key] }}
+{% endif %}
+{% endfor %}
+{% endfor %}
