@@ -1,0 +1,95 @@
+---
+- name: Converge
+  hosts: all
+  become: yes
+  vars:
+    ssh_enabled: yes
+
+  roles:
+    - role: role-ssh
+
+      ssh_sshd_config:
+        AllowTcpForwarding: 'no'
+        AuthorizedKeysFile: '%h/authorized_keys'
+        ClientAliveCountMax: 0
+        ClientAliveInterval: 0
+        HostbasedAuthentication: 'no'
+        HostKey:
+          - /etc/ssh/ssh_host_ed25519_key
+          - /etc/ssh/ssh_host_rsa_key
+        IgnoreRhosts: 'yes'
+        KeyRegenerationInterval: 3600
+        LoginGraceTime: 60s
+        LogLevel: INFO
+        PasswordAuthentication: 'no'
+        PermitEmptyPasswords: 'no'
+        PermitRootLogin: 'prohibit-password'
+        Port: 58575
+        PrintLastLog: 'yes'
+        PrintMotd: 'no'
+        Protocol: 2
+        PubkeyAuthentication: 'yes'
+        PermitUserEnvironment: 'no'
+        RhostsRSAAuthentication: 'no'
+        RhostsAuthentication: 'no'
+        RSAAuthentication: 'yes'
+        ServerKeyBits: 1024
+        StrictModes: 'yes'
+        'Subsystem sftp': /usr/lib/openssh/sftp-server
+        SyslogFacility: AUTH
+        TCPKeepAlive: 'yes'
+        UseDNS: 'no'
+        UsePAM: 'no'
+        GatewayPorts: 'no'
+        PermitTunnel: 'no'
+        UsePrivilegeSeparation: 'sandbox'
+        X11DisplayOffset: 10
+        X11Forwarding: 'no'
+        AllowAgentForwarding: 'no'
+        AllowUsers: 'root'
+        AllowGroups: 'root'
+        # Cipher settings from https://wiki.mozilla.org/Security/Guidelines/OpenSSH#Modern_.28OpenSSH_6.7.2B.29
+        KexAlgorithms: 'curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256'
+        Ciphers: 'chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr'
+        MACs: 'hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com'
+
+
+      ssh_users:
+
+          # name of the (existing!) user
+        - name: root
+
+          # name of the users primary group (for templating files)
+          # TODO can we run this to determine it in loops?
+          # /usr/bin/id -g -n root 2>/dev/null || echo root
+          # Default: "name"
+          group: root
+
+          # Generate a ed25519 and rsa keypair
+          keypair: true
+
+          # Setup key=value environment variables in ~/.ssh/environment
+          environment:
+            SOME: VARIABLE
+
+          # Manage $HOME/.ssh/config
+          config:
+            'sat.github.com':
+              HostName: 'github.com'
+              User: git
+              IdentityFile: '~/.ssh/id_ed25519'
+              IdentitiesOnly: 'yes'
+
+          # Populate authorized_keys
+          authorized_keys:
+            - key: 'ssh-rsa kdsfsakfsajkfsjfk peter@example.com'
+              options: 'no-port-forwarding,from="10.0.1.1"'
+            - key: https://github.com/charlie.keys
+            - key: "{{ lookup('file', '/home/charlie/.ssh/id_rsa.pub') }}"
+              # present or absent, default: present
+              state: present
+
+          # Accept host keys to known_hosts
+          known_hosts:
+            - github.com
+            - gitlab.com

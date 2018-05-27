@@ -1,0 +1,10 @@
+- name: accept ssh host keys to known_hosts
+  shell: |
+      grep {{ ssh_user_known_host }} ~/.ssh/known_hosts || \
+      ssh-keyscan {{ ssh_user_known_host }} 2>&1 >> ~/.ssh/known_hosts
+      chmod 600 ~/.ssh/*
+  become: yes
+  become_user: "{{ ssh_user['name'] }}"
+  with_items: "{{ ssh_user['known_hosts'] | default([]) }}"
+  loop_control:
+    loop_var: ssh_user_known_host
