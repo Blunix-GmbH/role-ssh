@@ -1,0 +1,11 @@
+{{ ansible_managed | comment }}
+
+{% for key in sshd_config | sort %}
+{% if sshd_config[key] is list %}
+{% for item in sshd_config[key] | sort %}
+{{ key }} {{ item }}
+{% endfor %}
+{% else %}
+{{ key }} {{ sshd_config[key] }}
+{% endif %}
+{% endfor %}

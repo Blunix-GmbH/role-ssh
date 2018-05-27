@@ -1,13 +1,4 @@
 ---
-- name: include distro vars
-  include_vars: "{{ var_item }}"
-  with_first_found:
-    - "{{ ansible_distribution }}.{{ ansible_lsb.codename }}.yml"
-    - "{{ ansible_distribution }}.yml"
-    - "default.yml"
-  loop_control:
-    loop_var: var_item
-
 - name: include distro installer
   include_tasks: "{{ distro_installer }}"
   with_first_found:
@@ -25,7 +16,3 @@
     - "configure/default.yml"
   loop_control:
     loop_var: distro_configurator
-
-- name: use LDAP for key authorization
-  when: ssh_ldap_key_auth
-  include_tasks: configure/authorized_keys_command.yml

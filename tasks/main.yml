@@ -3,4 +3,3 @@
   when: ssh_enabled
   tags:
     - ssh
-    - sshd

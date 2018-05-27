@@ -1,9 +1,9 @@
 ---
 - name: configure sshd_config
   template:
-    src: etc/ssh/sshd_config_{{ ansible_distribution_release }}.j2
+    src: etc/ssh/sshd_config.j2
     dest: /etc/ssh/sshd_config
     owner: root
     group: root
     mode: 0644
-  notify: reload sshd
+  notify: restart sshd
