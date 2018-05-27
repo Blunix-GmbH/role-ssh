@@ -11,7 +11,7 @@
 - name: include distro configurator
   include_tasks: '{{ distro_configurator }}'
   with_first_found:
-    - configure/{{ ansible_distribution }}.{{ ansuble_lsb.codename }}.yml
+    - configure/{{ ansible_distribution }}.{{ ansible_lsb.codename }}.yml
     - configure/{{ ansible_distribution }}.yml
     - configure/default.yml
   loop_control:
