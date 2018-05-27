@@ -16,6 +16,8 @@ provisioner:
   name: ansible
   connection_options:
     ansible_become: yes
+  options:
+    D: true
   lint:
     name: ansible-lint
 scenario:

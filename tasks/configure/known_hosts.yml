@@ -1,10 +1,26 @@
 - name: accept ssh host keys to known_hosts
   # TODO doesnt write anything to the file
-  shell: |
-      grep {{ ssh_user_known_host }} {{ ssh_user['home'] }}/.ssh/known_hosts || \
-      ssh-keyscan -t rsa,ed25519 -H {{ ssh_user_known_host }} &>> {{ ssh_user['home'] }}/.ssh/known_hosts
+  command: grep {{ ssh_user_known_host }} {{ ssh_user['home'] }}/.ssh/known_hosts || ssh-keyscan -t rsa,ed25519 -H {{ ssh_user_known_host }} &>> {{ ssh_user['home'] }}/.ssh/known_hosts
   become: yes
   become_user: "{{ ssh_user['name'] }}"
   with_items: "{{ ssh_user['known_hosts'] }}"
   loop_control:
     loop_var: ssh_user_known_host
+#
+#
+#
+# - name: Check known_host domain availability
+#   shell: "ssh-keygen -f {{ ssh_user['home'] }}/.ssh/known_hosts -F {{ ssh_user_known_host }}"
+#   with_items: "{{ ssh_user['known_hosts'] }}"
+#   loop_control:
+#     loop_var: ssh_user_known_host
+#   register: ssh_known_host_results
+#   ignore_errors: yes
+#
+# - name: Scan the public key
+#   shell: "ssh-keyscan -t rsa,ed25519 -H -T 10 {{ ssh_known_host_result }} >> {{ ssh_user['home'] }}/.ssh/known_hosts"
+#   become: yes
+#   become_user: "{{ ssh_user['name'] }}"
+#   with_items: ssh_known_host_results.results
+#     loop_var: ssh_known_host_result
+#   when: ssh_known_host_result.stdout == ""

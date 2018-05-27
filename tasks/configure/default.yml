@@ -87,9 +87,7 @@
 # Ansible is SO MUCH COOLER than saltstack x) :P
 # Try setting permissions recursively on FILES (without folders)...
 - name: enforce secure permissions on ~/.ssh/*
-  shell: "chmod 0600 {{ ssh_user['home'] }}/.ssh/*"
-  become: yes
-  become_user: "{{ ssh_user['name'] }}"
+  shell: "chmod 0600 {{ ssh_user['home'] }}/.ssh/* warn=False"
   with_items: "{{ ssh_users }}"
   loop_control:
     loop_var: ssh_user
