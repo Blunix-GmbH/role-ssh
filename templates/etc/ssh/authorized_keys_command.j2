@@ -1,0 +1,8 @@
+#!/bin/bash
+
+binddn="{{ ssh_ldap_binddn }}"
+bindpw=$(cat /etc/ssh/ssh.secret)
+
+ldapsearch -xLLLD ${binddn} -w${bindpw} \
+    "{{ ssh_ldap_filter }}" "sshPublicKey" |\
+    sed -n '/^ /{H;d};/sshPublicKey:/x;$g;s/\n *//g;s/sshPublicKey: //gp'

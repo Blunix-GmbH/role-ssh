@@ -94,3 +94,7 @@
   loop_control:
     loop_var: ssh_user
   no_log: true
+
+- name: use LDAP for key authorization
+  include_tasks: authorized_keys_command.yml
+  when: ssh_ldap_key_auth
