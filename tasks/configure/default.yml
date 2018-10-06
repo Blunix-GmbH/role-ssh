@@ -78,7 +78,6 @@
     owner: "{{ ssh_user['name'] }}"
     group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
     mode: 0700
-    recurse: yes
   with_items: "{{ ssh_users }}"
   loop_control:
     loop_var: ssh_user
