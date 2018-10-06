@@ -74,7 +74,7 @@
 
 - name: enforce secure permissions on ~/.ssh
   file:
-    dest: "{{ ssh_user['home'] }}/.ssh/"
+    dest: "{{ ssh_user['home'] }}/.ssh"
     owner: "{{ ssh_user['name'] }}"
     group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
     mode: 0700
@@ -83,8 +83,7 @@
     loop_var: ssh_user
   no_log: true
 
-# Ansible is SO MUCH COOLER than saltstack x) :P
-# Try setting permissions recursively on FILES (without folders)...
+  # TODO this breaks the idempotency tests
 - name: enforce secure permissions on ~/.ssh/*
   shell: "chmod 0600 {{ ssh_user['home'] }}/.ssh/* warn=False"
   with_items: "{{ ssh_users }}"
