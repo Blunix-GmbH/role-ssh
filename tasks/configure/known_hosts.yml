@@ -1,6 +1,9 @@
 - name: accept ssh host keys to known_hosts
   # TODO doesnt write anything to the file
-  command: grep {{ ssh_user_known_host }} {{ ssh_user['home'] }}/.ssh/known_hosts || ssh-keyscan -t rsa,ed25519 -H {{ ssh_user_known_host }} &>> {{ ssh_user['home'] }}/.ssh/known_hosts
+  shell: |
+    grep {{ ssh_user_known_host }} {{ ssh_user['home'] }}/.ssh/known_hosts || \
+    ssh-keyscan -t rsa,ed25519 -H {{ ssh_user_known_host }} &>> \
+    {{ ssh_user['home'] }}/.ssh/known_hosts
   become: yes
   become_user: "{{ ssh_user['name'] }}"
   with_items: "{{ ssh_user['known_hosts'] }}"

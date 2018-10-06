@@ -4,7 +4,7 @@ This role installs and configures SSH server and client.
 
 # Example Play
 
-Please refer to `molecule/install/playbook.yml` for a extensive playbook with descriptions
+Please refer to `molecule/default/playbook.yml` for a extensive playbook with descriptions.
 
 # License
 
