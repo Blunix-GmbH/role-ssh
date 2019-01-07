@@ -1,0 +1,11 @@
+# TODO this breaks the idempotency tests
+# TODO suceeds even when host is not known
+- name: accept ssh host keys to known_hosts
+  shell: "ssh -o HashKnownHosts=no -o StrictHostKeyChecking=no {{ ssh_user_known_host }} /bin/true || /bin/true"
+  args:
+    executable: /bin/bash
+  become: yes
+  become_user: "{{ ssh_user['name'] }}"
+  with_items: "{{ ssh_user['known_hosts'] }}"
+  loop_control:
+    loop_var: ssh_user_known_host

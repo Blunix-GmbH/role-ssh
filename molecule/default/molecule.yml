@@ -9,21 +9,31 @@ lint:
   name: yamllint
 platforms:
   - name: stretch
-    box: bento/debian-9.0
-    groups:
-      - debian
+    box: bento/debian-9
   - name: xenial
     box: bento/ubuntu-16.04
-    groups:
-      - ubuntu
 provisioner:
   name: ansible
   connection_options:
     ansible_become: yes
+  options:
+    D: true
   lint:
     name: ansible-lint
 scenario:
   name: default
+  test_sequence:
+    - lint
+    - destroy
+    - dependency
+    - syntax
+    - create
+    - prepare
+    - converge
+    # - idempotence
+    - side_effect
+    - verify
+    - destroy
 verifier:
   name: testinfra
   lint:

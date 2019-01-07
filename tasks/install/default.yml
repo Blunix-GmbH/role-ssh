@@ -1,7 +1,7 @@
 ---
-- name: install OpenSSH (client&server)
+- name: install OpenSSH server
   apt:
-    pkg: "{{ ssh_package_name }}"
-    state: installed
+    pkg: openssh-server
+    state: present
     update_cache: no
     install_recommends: no

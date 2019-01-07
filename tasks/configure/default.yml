@@ -1,9 +1,96 @@
 ---
-- name: configure sshd_config
+- name: configure /etc/ssh/sshd_config
   template:
-    src: etc/ssh/sshd_config_{{ ansible_distribution_release }}.j2
+    src: etc/ssh/sshd_config.j2
     dest: /etc/ssh/sshd_config
     owner: root
     group: root
     mode: 0644
-  notify: reload sshd
+  notify: restart sshd
+
+- name: configure /etc/ssh/ssh_config
+  template:
+    src: etc/ssh/ssh_config.j2
+    dest: /etc/ssh/ssh_config
+    owner: root
+    group: root
+    mode: 0644
+  when: ssh_ssh_config is defined
+  notify: restart sshd
+
+- name: include templating of authorized_keys
+  include_tasks: authorized_keys.yml
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+
+- name: generate ssh keypairs for users
+  shell: |
+      ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519 -N ''
+      ssh-keygen -t rsa -b 4096 -o -a 100 -f ~/.ssh/id_rsa -N ''
+  args:
+    creates: "{{ ssh_user['home'] }}/.ssh/id_rsa"
+  become: yes
+  become_user: "{{ ssh_user['name'] }}"
+  when: ssh_user['generate_keypair'] | default(false) == true
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+
+- name: template ~/.ssh/environment
+  template:
+    src: home/user/.ssh/environment.j2
+    dest: "{{ ssh_user['home'] }}/.ssh/environment"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    mode: 0600
+  become: yes
+  become_user: "{{ ssh_user['name'] }}"
+  when: ssh_user['environment'] is defined
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+
+- name: template ~/.ssh/config
+  template:
+    src: home/user/.ssh/config.j2
+    dest: "{{ ssh_user['home'] }}/.ssh/config"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    mode: 0600
+  become: yes
+  become_user: "{{ ssh_user['name'] }}"
+  when: ssh_user['config'] is defined
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+
+- name: include accepting host keys to known_hosts
+  include_tasks: known_hosts.yml
+  when: ssh_user['known_hosts'] is defined
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+
+- name: enforce secure permissions on ~/.ssh
+  file:
+    dest: "{{ ssh_user['home'] }}/.ssh"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    mode: 0700
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+  no_log: true
+
+  # TODO this breaks the idempotency tests
+- name: enforce secure permissions on ~/.ssh/*
+  shell: "chmod 0600 {{ ssh_user['home'] }}/.ssh/* warn=False"
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+  no_log: true
+
+- name: use LDAP for key authorization
+  include_tasks: authorized_keys_command.yml
+  when: ssh_ldap_key_auth
