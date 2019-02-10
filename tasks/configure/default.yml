@@ -27,9 +27,8 @@
 - name: generate ssh keypairs for users
   shell: |
       ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519 -N ''
-      ssh-keygen -t rsa -b 4096 -o -a 100 -f ~/.ssh/id_rsa -N ''
   args:
-    creates: "{{ ssh_user['home'] }}/.ssh/id_rsa"
+    creates: "{{ ssh_user['home'] }}/.ssh/id_ed25519.pub"
   become: yes
   become_user: "{{ ssh_user['name'] }}"
   when: ssh_user['generate_keypair'] | default(false) == true
@@ -72,7 +71,21 @@
   loop_control:
     loop_var: ssh_user
 
-- name: enforce secure permissions on ~/.ssh
+- name: template a nice bashrc for the users
+  include_tasks: bashrc.yml
+  when: ssh_user['bashrc'] is defined and ssh_user['bashrc'] == True
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+
+- name: fetch ssh public keys from remote hosts
+  include_tasks: remote_authorized_keys.yml
+  when: ssh_user['remote_authorized_keys'] is defined
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+
+- name: enforce secure permissions on the directory ~/.ssh
   file:
     dest: "{{ ssh_user['home'] }}/.ssh"
     owner: "{{ ssh_user['name'] }}"
@@ -83,14 +96,10 @@
     loop_var: ssh_user
   no_log: true
 
-  # TODO this breaks the idempotency tests
-- name: enforce secure permissions on ~/.ssh/*
+# TODO this breaks the idempotency tests
+- name: enforce secure permissions on the files in ~/.ssh/*
   shell: "chmod 0600 {{ ssh_user['home'] }}/.ssh/* warn=False"
   with_items: "{{ ssh_users }}"
   loop_control:
     loop_var: ssh_user
   no_log: true
-
-- name: use LDAP for key authorization
-  include_tasks: authorized_keys_command.yml
-  when: ssh_ldap_key_auth

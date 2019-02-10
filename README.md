@@ -1,6 +1,6 @@
 # Ansible Role SSH
 
-This role installs and configures SSH server and client.
+This role installs and configures SSH server and client. It also takes care of generating ssh keypairs, generating known_hosts files and other related features.
 
 # Example Play
 

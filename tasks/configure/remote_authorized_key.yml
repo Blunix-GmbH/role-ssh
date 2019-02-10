@@ -1,0 +1,11 @@
+- name: fetch the remote public key
+  shell: "cat {{ remote_authorized_key['path'] }}"
+  register: remote_public_key
+  delegate_to: "{{ remote_authorized_key['host'] }}"
+
+- name: setup the remote public key
+  authorized_key:
+    user: "{{ ssh_user['name'] }}"
+    state: present
+    key: "{{ remote_public_key.stdout }}"
+  ignore_errors: "{{ ansible_check_mode}}"
