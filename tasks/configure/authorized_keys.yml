@@ -4,7 +4,8 @@
     state: "{{ ssh_user_authorized_key['state'] | default('present') }}"
     key: "{{ ssh_user_authorized_key['key'] }}"
     key_options: "{{ ssh_user_authorized_key['options'] | default(None) }}"
-    manage_dir: true
+    manage_dir: True
+  when: ssh_user['state'] | default('present') != 'absent'
   with_items: "{{ ssh_user['authorized_keys'] | default([]) }}"
   loop_control:
     loop_var: ssh_user_authorized_key

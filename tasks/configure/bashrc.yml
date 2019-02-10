@@ -5,7 +5,7 @@
     owner: "{{ ssh_user['name'] }}"
     group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
     mode: 0640
-    dest: /root/.bashrc
+    dest: "{{ ssh_user['home'] }}/.bashrc"
     content: |
       # ~/.bashrc: executed by bash(1) for non-login shells.
       # If not running interactively, don't do anything

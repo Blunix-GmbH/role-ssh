@@ -68,6 +68,10 @@
           # name of the (existing if create is not True) user
         - name: root
 
+          # State of this user (present or absent, default: present)
+          # State absent will remove the user and its group, however it will not delete the home directory
+          state: present
+
           # name of the users primary group (for templating files)
           # TODO can we run this to determine it in loops?
           # /usr/bin/id -g -n root 2>/dev/null || echo root

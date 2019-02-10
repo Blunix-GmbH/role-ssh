@@ -6,6 +6,8 @@
     executable: /bin/bash
   become: yes
   become_user: "{{ ssh_user['name'] }}"
+  when: ssh_user['state'] | default('present') != 'absent'
   with_items: "{{ ssh_user['known_hosts'] }}"
   loop_control:
     loop_var: ssh_user_known_host
+
