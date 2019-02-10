@@ -18,6 +18,30 @@
   when: ssh_ssh_config is defined
   notify: restart sshd
 
+- name: create groups if specified
+  group:
+    name: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    system: "{{ ssh_user['system'] | default(True) }}"
+    gid: "{{ ssh_user['gid'] | default(ssh_user['uid']) }}"
+  when: ssh_user['create'] | default(False) == True
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+
+- name: create users if specified
+  user:
+    name: "{{ ssh_user['name'] }}"
+    system: "{{ ssh_user['system'] | default(True) }}"
+    uid: "{{ ssh_user['uid'] }}"
+    groups: "{{ ssh_user['groups'] | default([]) }}"
+    append: "{{ ssh_user['append'] | default(True) }}"
+    home: "{{ ssh_user['home'] }}"
+    shell: /bin/bash
+  when: ssh_user['create'] | default(False) == True
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+
 - name: include templating of authorized_keys
   include_tasks: authorized_keys.yml
   with_items: "{{ ssh_users }}"
