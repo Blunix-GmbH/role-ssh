@@ -1,0 +1,5 @@
+- name: include each host one by one
+  include_tasks: remote_authorized_key.yml
+  with_items: "{{ ssh_user['remote_authorized_keys'] }}"
+  loop_control:
+    loop_var: remote_authorized_key

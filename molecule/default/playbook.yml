@@ -2,8 +2,6 @@
 - name: Converge
   hosts: all
   become: yes
-  vars:
-    ssh_enabled: yes
 
   pre_tasks:
     - name: add group test
@@ -16,13 +14,6 @@
 
   roles:
     - role: role-ssh
-      ssh_enabled: true
-      ssh_use_ldap: true
-      ssh_ldap_key_auth: true
-      ssh_ldap_binddn: cn=sshd,ou=users,{{ slapd_basedn }}
-      ssh_ldap_filter: '(&(objectClass=posixAccount)(uid="$1"))'
-      slapd_basedn: dc=example,dc=com
-
       ssh_sshd_config:
         AllowAgentForwarding: 'no'
         AllowGroups: 'root vagrant'
@@ -64,11 +55,6 @@
         MACs: 'hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com'
         KexAlgorithms: 'curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256'
         Ciphers: 'chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr'
-        # If you want to use LDAP
-        AuthorizedKeysCommand: /etc/ssh/authorized_keys_command
-        AuthorizedKeysCommandUser: nobody
-        UsePAM: 'yes'
-
 
       ssh_ssh_config:
         '*':
@@ -79,8 +65,12 @@
 
       ssh_users:
 
-          # name of the (existing!) user
+          # name of the (existing if create is not True) user
         - name: root
+
+          # State of this user (present or absent, default: present)
+          # State absent will remove the user and its group, however it will not delete the home directory
+          state: present
 
           # name of the users primary group (for templating files)
           # TODO can we run this to determine it in loops?
@@ -91,8 +81,22 @@
           # Ansible is to retarded to determine a users home directory, hence...
           home: /root
 
-          # Generate a ed25519 and rsa keypair, default: false
-          generate_keypair: true
+          # Create the user and its group if it is not present
+          # Requires: group (default: name), home, uid and gid (default: uid)
+          create: True
+          uid: 1100
+          gid: 1200
+          # Wether to make this a system user and group, default: True
+          system: False
+          # Groups to put this user in
+          # Note that the users own group will always be added to the list of groups, so you don't have to specify it here
+          groups:
+            - games
+          # Append groups to already present groups of this user or enforce listed groups, default: True
+          append: False
+
+          # Generate a ed25519 keypair, default: False
+          generate_keypair: True
 
           # Setup key=value environment variables in ~/.ssh/environment
           environment:
@@ -121,6 +125,15 @@
             - gitlab.com
             - 10.0.0.10
 
+          # Give this user a nice ~/.bashrc, default: False
+          bashrc: True
+
+          # Pull a ssh public key from another instance and put it into authorized_keys
+          remote_authorized_keys:
+              # Ansible hostname
+            - host: backup.example.com
+              # Where to find the public key on this host
+              path: /var/lib/backuppc/.ssh/id_ed25519.pub
 
         # Minimal config - just add ssh authorized_keys
         - name: test
