@@ -77,7 +77,7 @@
           # Ansible is to retarded to determine a users home directory, hence...
           home: /root
 
-          # Generate a ed25519 and rsa keypair, default: False
+          # Generate a ed25519 keypair, default: False
           generate_keypair: True
 
           # Setup key=value environment variables in ~/.ssh/environment
