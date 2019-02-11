@@ -1,6 +1,4 @@
 - name: template a nice bashrc for this user
-  become: yes
-  become_user: "{{ ssh_user['name'] }}"
   copy:
     owner: "{{ ssh_user['name'] }}"
     group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"

@@ -130,7 +130,7 @@
   loop_control:
     loop_var: ssh_user
 
-- name: enforce secure permissions on the directory ~/.ssh
+- name: enforce secure permissions on the directory ~/.ssh/
   file:
     dest: "{{ ssh_user['home'] }}/.ssh"
     owner: "{{ ssh_user['name'] }}"
@@ -140,13 +140,11 @@
   when: ssh_user['state'] | default('present') != 'absent'
   loop_control:
     loop_var: ssh_user
-  no_log: true
 
 # TODO this breaks the idempotency tests
-- name: enforce secure permissions on the files in ~/.ssh/*
+- name: enforce secure permissions on the files in ~/.ssh/
   shell: "chmod 0600 {{ ssh_user['home'] }}/.ssh/* warn=False"
   with_items: "{{ ssh_users }}"
   when: ssh_user['state'] | default('present') != 'absent'
   loop_control:
     loop_var: ssh_user
-  no_log: true
