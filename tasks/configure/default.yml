@@ -38,7 +38,7 @@
     groups: "{{ ssh_user['groups'] | default([]) }}"
     append: "{{ ssh_user['append'] | default(True) }}"
     home: "{{ ssh_user['home'] }}"
-    shell: /bin/bash
+    shell: "{{ ssh_user['shell'] | default('/bin/bash') }}"
   when: ssh_user['create'] | default(False) == True and ssh_user['state'] | default('present') != 'absent'
   with_items: "{{ ssh_users }}"
   loop_control:

@@ -102,6 +102,9 @@
           environment:
             SOME: VARIABLE
 
+          # Specify shell to use
+          shell: /bin/bash
+
           # Manage $HOME/.ssh/config
           config:
             'sat.github.com':
