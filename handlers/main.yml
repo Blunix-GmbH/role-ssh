@@ -1,5 +1,10 @@
 ---
-- name: restart sshd
+- name: check sshd syntax
+  shell: /usr/sbin/sshd -t
+  listen: restart sshd
+
+- name: restart sshd service
   service:
     name: sshd
     state: restarted
+  listen: restart sshd
