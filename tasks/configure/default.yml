@@ -62,6 +62,13 @@
   loop_control:
     loop_var: ssh_user
 
+- name: fetch ssh public keys from remote hosts
+  include_tasks: remote_authorized_keys.yml
+  when: ssh_user['remote_authorized_keys'] is defined and ssh_user['state'] | default('present') != 'absent'
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_user
+
 - name: include templating of authorized_keys
   include_tasks: authorized_keys.yml
   when: ssh_user['state'] | default('present') != 'absent'
@@ -119,13 +126,6 @@
 - name: template a nice bashrc for the users
   include_tasks: bashrc.yml
   when: ssh_user['bashrc'] is defined and ssh_user['bashrc'] == True and ssh_user['state'] | default('present') != 'absent'
-  with_items: "{{ ssh_users }}"
-  loop_control:
-    loop_var: ssh_user
-
-- name: fetch ssh public keys from remote hosts
-  include_tasks: remote_authorized_keys.yml
-  when: ssh_user['remote_authorized_keys'] is defined and ssh_user['state'] | default('present') != 'absent'
   with_items: "{{ ssh_users }}"
   loop_control:
     loop_var: ssh_user

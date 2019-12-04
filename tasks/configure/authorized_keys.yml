@@ -1,12 +1,34 @@
-- name: template ~/.ssh/authorized_keys
-  authorized_key:
-    user: "{{ ssh_user['name'] }}"
-    state: "{{ ssh_user_authorized_key['state'] | default('present') }}"
-    key: "{{ ssh_user_authorized_key['key'] }}"
-    key_options: "{{ ssh_user_authorized_key['options'] | default(None) }}"
-    manage_dir: True
+#- name: template ~/.ssh/authorized_keys
+#  authorized_key:
+#    user: "{{ ssh_user['name'] }}"
+#    state: "{{ ssh_user_authorized_key['state'] | default('present') }}"
+#    key: "{{ ssh_user_authorized_key['key'] }}"
+#    key_options: "{{ ssh_user_authorized_key['options'] | default(None) }}"
+#    manage_dir: True
+#  when: ssh_user['state'] | default('present') != 'absent'
+#  with_items: "{{ ssh_user['authorized_keys'] | default([]) }}"
+#  loop_control:
+#    loop_var: ssh_user_authorized_key
+#  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: create ~/.ssh/ directory
+  file:
+    path: "{{ ssh_user['home'] }}/.ssh"
+    state: directory
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['name'] }}"
+    mode: 0700
+  become: True
+  become_user: "{{ ssh_user['name'] }}"
   when: ssh_user['state'] | default('present') != 'absent'
-  with_items: "{{ ssh_user['authorized_keys'] | default([]) }}"
-  loop_control:
-    loop_var: ssh_user_authorized_key
-  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: template ~/.ssh/authorized_keys
+  template:
+    src: templates/home/user/.ssh/authorized_keys.j2
+    dest: "{{ ssh_user['home'] }}/.ssh/authorized_keys"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['name'] }}"
+    mode: 0600
+  become: True
+  become_user: "{{ ssh_user['name'] }}"
+  when: ssh_user['state'] | default('present') != 'absent'
