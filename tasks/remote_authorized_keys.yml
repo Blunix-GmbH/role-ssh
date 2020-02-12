@@ -3,3 +3,5 @@
   with_items: "{{ ssh_user['remote_authorized_keys'] }}"
   loop_control:
     loop_var: remote_authorized_key
+  tags:
+    - authorized_keys

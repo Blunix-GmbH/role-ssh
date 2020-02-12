@@ -1,7 +1,0 @@
----
-- name: install OpenSSH server
-  apt:
-    pkg: openssh-server
-    state: present
-    update_cache: no
-    install_recommends: no

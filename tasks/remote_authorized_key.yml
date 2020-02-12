@@ -2,6 +2,8 @@
   shell: "cat {{ remote_authorized_key['path'] }}"
   register: remote_public_key
   delegate_to: "{{ remote_authorized_key['host'] }}"
+  tags:
+    - authorized_keys
 
 #- name: setup the remote public key
 #  authorized_key:
@@ -13,3 +15,6 @@
 - name: append the remote public key to the list of authorized_keys
   set_fact:
     fetched_remote_public_keys: "{{ fetched_remote_public_keys + remote_public_key }}"
+  tags:
+    - authorized_keys
+

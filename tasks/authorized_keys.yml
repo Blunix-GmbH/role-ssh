@@ -11,7 +11,7 @@
 #    loop_var: ssh_user_authorized_key
 #  ignore_errors: "{{ ansible_check_mode }}"
 
-- name: create ~/.ssh/ directory
+- name: "create directory {{ ssh_user['home'] }}/.ssh"
   file:
     path: "{{ ssh_user['home'] }}/.ssh"
     state: directory
@@ -21,8 +21,10 @@
   become: True
   become_user: "{{ ssh_user['name'] }}"
   when: ssh_user['state'] | default('present') != 'absent'
+  tags:
+    - authorized_keys
 
-- name: template ~/.ssh/authorized_keys
+- name: "template {{ ssh_user['home'] }}/.ssh/authorized_keys"
   template:
     src: templates/home/user/.ssh/authorized_keys.j2
     dest: "{{ ssh_user['home'] }}/.ssh/authorized_keys"
@@ -32,3 +34,5 @@
   become: True
   become_user: "{{ ssh_user['name'] }}"
   when: ssh_user['state'] | default('present') != 'absent'
+  tags:
+    - authorized_keys

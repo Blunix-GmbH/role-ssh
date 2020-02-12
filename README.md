@@ -8,6 +8,11 @@ Please refer to `molecule/default/playbook.yml` for a extensive playbook with de
 When creating users, the users own group has to be specified.. Thats rather annoying and a bit hacky to get around.  
 Also users stay in the "users" group even if append: False is specified for creating the user.
 
+# Tags
+authorized_keys: manage all authorized_keys files  
+config: manage all config files  
+remove: remove users and groups set to absent
+
 # License
 Apache-2.0
 
