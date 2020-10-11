@@ -1,6 +1,5 @@
----
 - name: check sshd syntax
-  shell: /usr/sbin/sshd -t
+  shell: /usr/sbin/sshd -t  # noqa 305
   listen: restart sshd
 
 - name: restart sshd service

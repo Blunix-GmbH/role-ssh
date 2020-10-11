@@ -1,25 +1,29 @@
 - name: install OpenSSH server
   apt:
-    pkg: openssh-server
+    name:
+      - openssh-server
+      # For Ansible become
+      - acl
     state: present
-    update_cache: no
-    install_recommends: no
+    update_cache: False
+    install_recommends: False
 
-- name: configure /etc/ssh/sshd_config
+- name: configure /etc/ssh/sshd_config.d/ansible.conf
   template:
-    src: etc/ssh/sshd_config.j2
-    dest: /etc/ssh/sshd_config
+    src: etc/ssh/sshd_config.d/ansible.conf.j2
+    dest: /etc/ssh/sshd_config.d/ansible.conf
     owner: root
     group: root
     mode: 0644
   notify: restart sshd
+  when: ssh_sshd_config is defined
   tags:
     - config
 
-- name: configure /etc/ssh/ssh_config
+- name: configure /etc/ssh/ssh_config.d/ansible.conf
   template:
-    src: etc/ssh/ssh_config.j2
-    dest: /etc/ssh/ssh_config
+    src: etc/ssh/ssh_config.d/ansible.conf.j2
+    dest: /etc/ssh/ssh_config.d/ansible.conf
     owner: root
     group: root
     mode: 0644
@@ -28,147 +32,16 @@
   tags:
     - config
 
-- name: create groups if specified
-  group:
-    name: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
-    system: "{{ ssh_user['system'] | default(True) }}"
-    gid: "{{ ssh_user['gid'] | default(ssh_user['uid']) }}"
-  when: ssh_user['create'] | default(False) == True and ssh_user['state'] | default('present') != 'absent'
+- name: "include tasks to manage user {{ ssh_user['name'] }}"
+  include_tasks: users/manage.yml
   with_items: "{{ ssh_users }}"
   loop_control:
     loop_var: ssh_user
+  when: ssh_user['state'] | default('present') != 'absent'
 
-- name: create users if specified
-  user:
-    name: "{{ ssh_user['name'] }}"
-    system: "{{ ssh_user['system'] | default(True) }}"
-    uid: "{{ ssh_user['uid'] }}"
-    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
-    # TODO the human configuring ansible has to specify the group of this user here, which is not nice
-    groups: "{{ ssh_user['groups'] | default([]) }}"
-    append: "{{ ssh_user['append'] | default(True) }}"
-    home: "{{ ssh_user['home'] }}"
-    shell: "{{ ssh_user['shell'] | default('/bin/bash') }}"
-  when: ssh_user['create'] | default(False) == True and ssh_user['state'] | default('present') != 'absent'
+- name: "include tasks to remove user {{ ssh_user['name'] }}"
+  include_tasks: users/remove.yml
   with_items: "{{ ssh_users }}"
   loop_control:
     loop_var: ssh_user
-
-- name: remove groups if specified
-  group:
-    name: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
-    state: absent
   when: ssh_user['state'] | default('present') == 'absent'
-  with_items: "{{ ssh_users }}"
-  loop_control:
-    loop_var: ssh_user
-  tags:
-    - remove
-
-- name: remove users if specified
-  user:
-    name: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
-    state: absent
-  when: ssh_user['state'] | default('present') == 'absent'
-  with_items: "{{ ssh_users }}"
-  loop_control:
-    loop_var: ssh_user
-  tags:
-    - remove
-
-- name: fetch ssh public keys from remote hosts
-  include_tasks: remote_authorized_keys.yml
-  when: ssh_user['remote_authorized_keys'] is defined and ssh_user['state'] | default('present') != 'absent'
-  with_items: "{{ ssh_users }}"
-  loop_control:
-    loop_var: ssh_user
-  tags:
-    - authorized_keys
-
-- name: include templating of authorized_keys
-  include_tasks: authorized_keys.yml
-  when: ssh_user['state'] | default('present') != 'absent'
-  with_items: "{{ ssh_users }}"
-  loop_control:
-    loop_var: ssh_user
-  tags:
-    - authorized_keys
-
-- name: generate ssh keypairs for users
-  shell: |
-      ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519 -N ''
-  args:
-    creates: "{{ ssh_user['home'] }}/.ssh/id_ed25519.pub"
-  become: yes
-  become_user: "{{ ssh_user['name'] }}"
-  when: ssh_user['generate_keypair'] | default(false) == true and ssh_user['state'] | default('present') != 'absent'
-  with_items: "{{ ssh_users }}"
-  loop_control:
-    loop_var: ssh_user
-
-- name: template ~/.ssh/environment
-  template:
-    src: home/user/.ssh/environment.j2
-    dest: "{{ ssh_user['home'] }}/.ssh/environment"
-    owner: "{{ ssh_user['name'] }}"
-    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
-    mode: 0600
-  become: yes
-  become_user: "{{ ssh_user['name'] }}"
-  when: ssh_user['environment'] is defined and ssh_user['state'] | default('present') != 'absent'
-  with_items: "{{ ssh_users }}"
-  loop_control:
-    loop_var: ssh_user
-  tags:
-    - config
-
-- name: template ~/.ssh/config
-  template:
-    src: home/user/.ssh/config.j2
-    dest: "{{ ssh_user['home'] }}/.ssh/config"
-    owner: "{{ ssh_user['name'] }}"
-    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
-    mode: 0600
-  become: yes
-  become_user: "{{ ssh_user['name'] }}"
-  when: ssh_user['config'] is defined and ssh_user['state'] | default('present') != 'absent'
-  with_items: "{{ ssh_users }}"
-  loop_control:
-    loop_var: ssh_user
-  tags:
-    - config
-
-- name: include accepting host keys to known_hosts
-  include_tasks: known_hosts.yml
-  when: ssh_user['known_hosts'] is defined and ssh_user['state'] | default('present') != 'absent'
-  with_items: "{{ ssh_users }}"
-  loop_control:
-    loop_var: ssh_user
-
-- name: template a nice bashrc for the users
-  include_tasks: bashrc.yml
-  when: ssh_user['bashrc'] is defined and ssh_user['bashrc'] == True and ssh_user['state'] | default('present') != 'absent'
-  with_items: "{{ ssh_users }}"
-  loop_control:
-    loop_var: ssh_user
-  tags:
-    - config
-
-- name: enforce secure permissions on the directory ~/.ssh/
-  file:
-    dest: "{{ ssh_user['home'] }}/.ssh"
-    owner: "{{ ssh_user['name'] }}"
-    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
-    mode: 0700
-  with_items: "{{ ssh_users }}"
-  when: ssh_user['state'] | default('present') != 'absent'
-  loop_control:
-    loop_var: ssh_user
-
-# TODO this breaks the idempotency tests
-- name: enforce secure permissions on the files in ~/.ssh/
-  shell: "chmod 0600 {{ ssh_user['home'] }}/.ssh/* warn=False"
-  with_items: "{{ ssh_users }}"
-  when: ssh_user['state'] | default('present') != 'absent'
-  loop_control:
-    loop_var: ssh_user

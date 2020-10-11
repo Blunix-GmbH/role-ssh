@@ -1,145 +1,143 @@
----
 - name: Converge
   hosts: all
-  become: yes
-
-  pre_tasks:
-    - name: add group test
-      group:
-        name: test
-    - name: add user test
-      user:
-        name: test
-        group: test
-
+  become: True
   roles:
     - role: role-ssh
-      ssh_sshd_config:
-        AllowAgentForwarding: 'no'
-        AllowGroups: 'root vagrant'
-        AllowUsers: 'root vagrant'
-        AllowTcpForwarding: 'no'
-        AuthorizedKeysFile: '%h/.ssh/authorized_keys'
-        ChallengeResponseAuthentication: 'no'
-        ClientAliveCountMax: 0
-        ClientAliveInterval: 0
-        GatewayPorts: 'no'
-        GSSAPIAuthentication: 'no'
-        HostbasedAuthentication: 'no'
-        HostKey:
-          - /etc/ssh/ssh_host_ed25519_key
-          - /etc/ssh/ssh_host_rsa_key
-        IgnoreRhosts: 'yes'
-        ListenAddress: 0.0.0.0
-        LoginGraceTime: 60s
-        LogLevel: INFO
-        PasswordAuthentication: 'no'
-        PermitEmptyPasswords: 'no'
-        PermitRootLogin: 'prohibit-password'
-        PermitTunnel: 'no'
-        PermitUserEnvironment: 'no'
-        Port: 22
-        PrintLastLog: 'yes'
-        PrintMotd: 'no'
-        Protocol: 2
-        PubkeyAuthentication: 'yes'
-        StrictModes: 'yes'
-        'Subsystem sftp': /usr/lib/openssh/sftp-server
-        SyslogFacility: AUTH
-        TCPKeepAlive: 'yes'
-        UseDNS: 'no'
-        UsePrivilegeSeparation: 'sandbox'
-        X11DisplayOffset: 10
-        X11Forwarding: 'no'
-        # Cipher settings from https://wiki.mozilla.org/Security/Guidelines/OpenSSH#Modern_.28OpenSSH_6.7.2B.29
-        MACs: 'hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com'
-        KexAlgorithms: 'curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256'
-        Ciphers: 'chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr'
+  vars:
 
-      ssh_ssh_config:
-        '*':
-          SendEnv: 'LANG LC_*'
-          HashKnownHosts: 'yes'
-          GSSAPIAuthentication: 'yes'
+    # Will template /etc/ssh/sshd_config.d/ansible.conf
+    ssh_sshd_config:
+      AllowAgentForwarding: 'no'
+      AllowGroups: 'root vagrant'
+      AllowTcpForwarding: 'no'
+      AllowUsers: 'root vagrant'
+      ChallengeResponseAuthentication: 'no'
+      GatewayPorts: 'no'
+      GSSAPIAuthentication: 'no'
+      HostbasedAuthentication: 'no'
+      HostKey:
+        - /etc/ssh/ssh_host_ed25519_key
+        - /etc/ssh/ssh_host_rsa_key
+      IgnoreRhosts: 'yes'
+      ListenAddress: 0.0.0.0
+      PasswordAuthentication: 'no'
+      PermitEmptyPasswords: 'no'
+      PermitRootLogin: 'prohibit-password'
+      PermitTunnel: 'no'
+      PermitUserEnvironment: 'no'
+      PubkeyAuthentication: 'yes'
+      X11Forwarding: 'no'
+
+    # Will template /etc/ssh/ssh_config.d/ansible.conf
+    ssh_ssh_config:
+      '*':
+        SendEnv: 'LANG LC_*'
+        HashKnownHosts: 'yes'
+        GSSAPIAuthentication: 'yes'
 
 
-      ssh_users:
+    # Manage linux users and their ssh settings
+    ssh_users:
 
-          # name of the (existing if create is not True) user
-        - name: root
+        # name of the (existing if create is not True) user
+      - name: root
 
-          # State of this user (present or absent, default: present)
-          # State absent will remove the user and its group, however it will not delete the home directory
-          state: present
+        # Create the user and its group if it is not present
+        # Requires: group (default: name), home, uid and gid (default: uid)
+        create: True
 
-          # name of the users primary group (for templating files)
-          # TODO can we run this to determine it in loops?
-          # /usr/bin/id -g -n root 2>/dev/null || echo root
-          # Default: "name"
-          group: root
+        # State of this user (present or absent, default: present)
+        # State absent will remove the user and its group, however it will not delete the home directory
+        state: present
 
-          # Ansible is to retarded to determine a users home directory, hence...
-          home: /root
+        # Ansible is to retarded to determine a users home directory, hence...
+        home: /root
 
-          # Create the user and its group if it is not present
-          # Requires: group (default: name), home, uid and gid (default: uid)
-          create: True
-          uid: 1100
-          gid: 1200
-          # Wether to make this a system user and group, default: True
-          system: False
-          # Groups to put this user in
-          # Note that the users own group will always be added to the list of groups, so you don't have to specify it here
-          groups:
-            - games
-          # Append groups to already present groups of this user or enforce listed groups, default: True
-          append: False
+        # name of the users primary group (for templating files) (Default: "name")
+        group: root
 
-          # Generate a ed25519 keypair, default: False
-          generate_keypair: True
+        # Groups to put this user in
+        # Note that the users own group will always be added to the list of groups, so you don't have to specify it here
+        groups:
+          - games
 
-          # Setup key=value environment variables in ~/.ssh/environment
-          environment:
-            SOME: VARIABLE
+        # Append groups to already present groups of this user or enforce listed groups, default: True
+        append: False
 
-          # Specify shell to use
-          shell: /bin/bash
+        # User and group ID
+        uid: "0"
+        gid: "0"
 
-          # Manage $HOME/.ssh/config
-          config:
-            'sat.github.com':
-              HostName: 'github.com'
-              User: git
-              IdentityFile: '~/.ssh/id_ed25519'
-              IdentitiesOnly: 'yes'
+        # Weather to make this a system user and group, default: True
+        system: False
 
-          # Populate authorized_keys
-          authorized_keys:
-            # - key: https://github.com/charlie.keys
-            #   options: 'no-port-forwarding,from="10.0.1.1"'
-            # - key: "{{ lookup('file', '/home/charlie/.ssh/id_rsa.pub') }}"
-            #   # present or absent, default: present
-            #   state: present
-            - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHEzTo2d3WzUakc13titW32kUyjPAfjNxGnxgb5/bv3Q p.thurner@blunix.org"
+        # Specify login shell
+        shell: /bin/bash
 
-          # Accept host keys to known_hosts
-          known_hosts:
-            - github.com
-            - gitlab.com
-            - 10.0.0.10
+        # Give this user a nice default ~/.bashrc, default: False
+        bashrc: True
 
-          # Give this user a nice ~/.bashrc, default: False
-          bashrc: True
+        # Create /home/user/.bashrc.d/test.sh
+        bashrc_templates:
+          - name: test
+            content: |
+              alias foo=bar
 
-          # Pull a ssh public key from another instance and put it into authorized_keys
-          remote_authorized_keys:
-              # Ansible hostname
-            - host: backup.example.com
-              # Where to find the public key on this host
-              path: /var/lib/backuppc/.ssh/id_ed25519.pub
+        # Generate a ed25519 keypair, default: False
+        generate_keypair: True
 
-        # Minimal config - just add ssh authorized_keys
-        - name: test
-          home: /home/test
-          authorized_keys:
-            - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHEzTo2d3WzUakc13titW32kUyjPAfjNxGnxgb5/bv3Q p.thurner@blunix.org"
+        # Setup key=value environment variables in ~/.ssh/environment
+        environment:
+          SOME: VARIABLE
+
+        # Manage $HOME/.ssh/config
+        config:
+          sat.github.com:
+            HostName: 'github.com'
+            User: git
+            IdentityFile: '~/.ssh/id_ed25519'
+            IdentitiesOnly: 'yes'
+
+        # Accept host keys to known_hosts
+        known_hosts:
+          - github.com
+          - gitlab.com
+
+        # Pull a ssh public key from another instance and put it into authorized_keys
+        remote_authorized_keys:
+            # Ansible hostname
+          - host: bullseye
+            # Where to find the public key on this host
+            path: /root/.ssh/id_ed25519.pub
+
+        # Populate authorized_keys
+        authorized_keys:
+          # - key: https://github.com/charlie.keys
+          #   options: 'no-port-forwarding,from="10.0.1.1"'
+          # - key: "{{ lookup('file', '/home/charlie/.ssh/id_rsa.pub') }}"
+          #   # present or absent, default: present
+          #   state: present
+          - key: "ssh-ed25519 AAAABCDEFG u.name@example.com"
+
+
+
+      # Minimal config - just add a public key to ssh authorized_keys of an existing user
+      - name: backuppc
+        home: /var/lib/backuppc
+        authorized_keys:
+          - key: "ssh-ed25519 AAAABCDEFG u.name@example.com"
+
+
+
+  # Only for molecule
+  pre_tasks:
+
+    - name: add group backuppc
+      group:
+        name: backuppc
+
+    - name: add user backuppc
+      user:
+        name: backuppc
+        group: backuppc
+        home: /var/lib/backuppc

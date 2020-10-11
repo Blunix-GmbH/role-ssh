@@ -1,0 +1,40 @@
+# {{ ansible_managed }}
+#
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# If not running interactively, don't do anything
+
+case $- in
+    *i*) ;;
+      *) return ;;
+esac
+
+# don't put duplicate lines or lines starting with space in the history.
+HISTCONTROL=ignoreboth
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTFILESIZE=99999999
+HISTSIZE=99999999
+
+# check the window size after each command and, if necessary, update the values of LINES and COLUMNS
+shopt -s checkwinsize
+
+# Set PS1 with some nice colors
+PS1="\[$(tput bold)\]\[\033[38;5;39m\]\u\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;15m\]@\[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;82m\]\$(hostname -s)\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;15m\].\[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;39m\]\$(hostname -d)\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;15m\] \[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;226m\]\w\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;15m\] \\$ \[$(tput sgr0)\]"
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# Source more .bashrc files
+if ls $HOME/.bashrc.d/*.sh 2>&1 >/dev/null; then
+    source $HOME/.bashrc.d/*.sh
+fi

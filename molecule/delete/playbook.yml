@@ -1,0 +1,61 @@
+- name: Converge
+  hosts: all
+  become: True
+  roles:
+    - role: role-ssh
+  vars:
+
+    ssh_users:
+
+      - name: backuppc
+        state: absent
+        create: True
+        group: backuppc
+        home: /var/lib/backuppc
+        uid: "1001"
+        gid: "1001"
+        system: False
+        groups:
+          - games
+        append: False
+        generate_keypair: True
+        environment:
+          SOME: VARIABLE
+        shell: /bin/bash
+        config:
+          'sat.github.com':
+            HostName: 'github.com'
+            User: git
+            IdentityFile: '~/.ssh/id_ed25519'
+            IdentitiesOnly: 'yes'
+        authorized_keys:
+          - key: "ssh-ed25519 AAAABCDEFG u.name@example.com"
+        known_hosts:
+          - github.com
+          - gitlab.com
+        bashrc: True
+        bashrc_templates:
+          - name: test
+            content: |
+              alias foo=bar
+        remote_authorized_keys:
+         - host: localhost
+           path: /var/lib/backuppc/.ssh/id_ed25519.pub
+
+
+  # Only for molecule
+  pre_tasks:
+
+    - name: add group backuppc
+      group:
+        name: backuppc
+        gid: 1001
+      changed_when: "'molecule-notest' not in ansible_skip_tags"
+
+    - name: add user backuppc
+      user:
+        name: backuppc
+        group: backuppc
+        uid: 1001
+        home: /var/lib/backuppc
+      changed_when: "'molecule-notest' not in ansible_skip_tags"

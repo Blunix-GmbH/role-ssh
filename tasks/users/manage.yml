@@ -1,0 +1,182 @@
+- name: "ssh user {{ ssh_user['name'] }} create group {{ ssh_user['group'] | default(ssh_user['name']) }}"
+  group:
+    name: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    system: "{{ ssh_user['system'] | default(True) }}"
+    gid: "{{ ssh_user['gid'] | default(ssh_user['uid']) }}"
+  when: ssh_user['create'] | default(False)
+
+- name: "ssh user {{ ssh_user['name'] }} create user"
+  user:
+    name: "{{ ssh_user['name'] }}"
+    system: "{{ ssh_user['system'] | default(True) }}"
+    uid: "{{ ssh_user['uid'] }}"
+    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    groups: "{{ ssh_user['groups'] | default([]) }}"
+    append: "{{ ssh_user['append'] | default(True) }}"
+    home: "{{ ssh_user['home'] }}"
+    shell: "{{ ssh_user['shell'] | default('/bin/bash') }}"
+  when: ssh_user['create'] | default(False)
+
+
+- name: "ssh user {{ ssh_user['name'] }} create ~/.ssh directory"
+  file:
+    path: "{{ ssh_user['home'] }}/.ssh"
+    state: directory
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['name'] }}"
+    mode: 0700
+
+
+
+- name: "ssh user {{ ssh_user['name'] }} create directory ~/.bashrc.d/"
+  file:
+    state: directory
+    path: "{{ ssh_user['home'] }}/.bashrc.d/"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    mode: 0750
+  when: ssh_user['bashrc'] | default(False)
+  tags:
+    - bashrc
+
+- name: "ssh user {{ ssh_user['name'] }} create ~/.bashrc.d/placeholder.sh"
+  copy:
+    dest: "{{ ssh_user['home'] }}/.bashrc.d/placeholder.sh"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    mode: 0700
+    content: "# This is a placeholder file"
+
+- name: "ssh user {{ ssh_user['name'] }} template ~/.bashrc.d/ files"
+  copy:
+    dest: "{{ ssh_user['home'] }}/.bashrc.d/{{ bashrc_template['name'] }}"
+    content: "{{ bashrc_template['content'] }}"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    mode: 0640
+  with_items: "{{ ssh_user['bashrc_templates'] }}"
+  loop_control:
+    loop_var: bashrc_template
+  when: ssh_user['bashrc'] | default(False) and ssh_user['bashrc_templates'] is defined
+  tags:
+    - bashrc
+
+- name: "ssh user {{ ssh_user['name'] }} template ~/.bashrc"
+  template:
+    src: templates/home/user/.bashrc.j2
+    dest: "{{ ssh_user['home'] }}/.bashrc"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    mode: 0640
+  when: ssh_user['bashrc'] | default(False)
+  tags:
+    - bashrc
+
+
+
+- name: "ssh user {{ ssh_user['name'] }} generate ssh keypair"  # noqa 305
+  shell: ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519 -N ''
+  args:
+    creates: "{{ ssh_user['home'] }}/.ssh/id_ed25519.pub"
+  become: True
+  become_user: "{{ ssh_user['name'] }}"
+  when: ssh_user['generate_keypair'] | default(False)
+
+
+- name: "ssh user {{ ssh_user['name'] }} template ~/.ssh/environment"
+  template:
+    src: templates/home/user/.ssh/environment.j2
+    dest: "{{ ssh_user['home'] }}/.ssh/environment"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    mode: 0600
+  become: True
+  become_user: "{{ ssh_user['name'] }}"
+  when: ssh_user['environment'] is defined
+  tags:
+    - config
+
+
+- name: "ssh user {{ ssh_user['name'] }} template ~/.ssh/config"
+  template:
+    src: templates/home/user/.ssh/config.j2
+    dest: "{{ ssh_user['home'] }}/.ssh/config"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    mode: 0600
+  when: ssh_user['config'] is defined
+  tags:
+    - config
+
+
+
+- name: "ssh user {{ ssh_user['name'] }} get ssh host keys"
+  shell: |
+    set -o pipefail
+    ssh-keyscan -t rsa,ed25519 -T 5 {{ ssh_user_known_host }} 2>&1 | grep -v '#'
+  args:
+    executable: /bin/bash
+  with_items: "{{ ssh_user['known_hosts'] }}"
+  loop_control:
+    loop_var: ssh_user_known_host
+  register: ssh_known_host_results
+  changed_when: "'molecule-notest' not in ansible_skip_tags"
+  when: ssh_user['known_hosts'] is defined
+
+- name: "ssh user {{ ssh_user['name'] }} verify that ssh-keyscan output is not empty"
+  fail:
+    msg: "Key scan empty: {{ ssh_known_host_result.stdout }}"
+  with_items: "{{ ssh_known_host_results.results }}"
+  loop_control:
+    loop_var: ssh_known_host_result
+  when: ssh_user['known_hosts'] is defined and ssh_known_host_result.stdout == ""  # noqa 602
+
+- name: "ssh user {{ ssh_user['name'] }} update ssh known_hosts files"
+  known_hosts:
+    name: "{{ ssh_user['known_hosts'][ssh_known_host_index] }}"
+    key: "{{ ssh_known_host_result.stdout }}"
+    path: "{{ ssh_user['home'] }}/.ssh/known_hosts"
+  with_items: "{{ ssh_known_host_results.results }}"
+  loop_control:
+    loop_var: ssh_known_host_result
+    index_var: ssh_known_host_index
+  when: ssh_user['known_hosts'] is defined
+
+
+
+- name: "ssh user {{ ssh_user['name'] }} fetch ssh public keys from remote hosts"
+  include_tasks: remote_authorized_key.yml
+  with_items: "{{ ssh_user['remote_authorized_keys'] }}"
+  loop_control:
+    loop_var: remote_authorized_key
+  when: ssh_user['remote_authorized_keys'] is defined
+  tags:
+    - authorized_keys
+
+
+
+- name: "ssh user {{ ssh_user['name'] }} template ~/.ssh/authorized_keys"
+  template:
+    src: templates/home/user/.ssh/authorized_keys.j2
+    dest: "{{ ssh_user['home'] }}/.ssh/authorized_keys"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['name'] }}"
+    mode: 0600
+  become: True
+  become_user: "{{ ssh_user['name'] }}"
+  tags:
+    - authorized_keys
+
+
+
+- name: "ssh user {{ ssh_user['name'] }} enforce secure permissions on ~/.ssh/"
+  file:
+    state: directory
+    dest: "{{ ssh_user['home'] }}/.ssh"
+    owner: "{{ ssh_user['name'] }}"
+    group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    mode: 0700
+
+- name: "ssh user {{ ssh_user['name'] }} enforce secure permissions on ~/.ssh/*"
+  shell: "chmod 0600 {{ ssh_user['home'] }}/.ssh/* warn=False"
+  changed_when: "'molecule-notest' not in ansible_skip_tags"

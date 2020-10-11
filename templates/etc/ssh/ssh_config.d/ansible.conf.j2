@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+
+{% for host in ssh_ssh_config | sort %}
+Host {{ host }}
+{% for key in ssh_ssh_config[host] | sort %}
+{# Ansible does not seem to provide a "is_list" filter (as saltstack does) #}
+{% if ssh_ssh_config[host][key] is sequence and ssh_ssh_config[host][key] is not string and ssh_ssh_config[host][key] is not mapping %}
+{% for item in ssh_ssh_config[host][key] | sort %}
+    {{ key }} {{ item }}
+{% endfor %}
+{% else %}
+    {{ key }} {{ ssh_ssh_config[host][key] }}
+{% endif %}
+{% endfor %}
+{% endfor %}

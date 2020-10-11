@@ -39,7 +39,7 @@ provisioner:
       always: True
 
 scenario:
-  name: default
+  name: delete
 
 verifier:
   name: testinfra

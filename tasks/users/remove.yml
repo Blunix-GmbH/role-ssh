@@ -1,0 +1,17 @@
+- name: "ssh user {{ ssh_user['name'] }} remove user"
+  user:
+    name: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    state: absent
+  when: ssh_user['state'] | default('present') == 'absent'
+  changed_when: "'molecule-notest' not in ansible_skip_tags"
+  tags:
+    - remove
+
+- name: "ssh user {{ ssh_user['name'] }} remove group {{ ssh_user['group'] | default(ssh_user['name']) }}"
+  group:
+    name: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
+    state: absent
+  when: ssh_user['state'] | default('present') == 'absent'
+  changed_when: "'molecule-notest' not in ansible_skip_tags"
+  tags:
+    - remove

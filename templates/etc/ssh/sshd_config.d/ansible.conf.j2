@@ -1,4 +1,4 @@
-{{ ansible_managed | comment }}
+# {{ ansible_managed }}
 
 {% for key in ssh_sshd_config | sort %}
 {# Ansible does not seem to provide a "is_list" filter (as saltstack does) #}
@@ -10,3 +10,4 @@
 {{ key }} {{ ssh_sshd_config[key] }}
 {% endif %}
 {% endfor %}
+
