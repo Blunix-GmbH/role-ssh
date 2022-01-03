@@ -5,8 +5,6 @@
       # For Ansible become
       - acl
     state: present
-    update_cache: False
-    install_recommends: False
 
 - name: configure /etc/ssh/sshd_config.d/ansible.conf
   template:
@@ -16,7 +14,6 @@
     group: root
     mode: 0644
   notify: restart sshd
-  when: ssh_sshd_config is defined
   tags:
     - config
 
@@ -27,10 +24,16 @@
     owner: root
     group: root
     mode: 0644
-  when: ssh_ssh_config is defined
   notify: restart sshd
   tags:
     - config
+
+- name: create admins group
+  group:
+    name: admins
+    gid: 20000
+  tags:
+    - user
 
 - name: "include tasks to manage user {{ ssh_user['name'] }}"
   include_tasks: users/manage.yml
@@ -38,6 +41,8 @@
   loop_control:
     loop_var: ssh_user
   when: ssh_user['state'] | default('present') != 'absent'
+  tags:
+    - user
 
 - name: "include tasks to remove user {{ ssh_user['name'] }}"
   include_tasks: users/remove.yml
@@ -45,3 +50,5 @@
   loop_control:
     loop_var: ssh_user
   when: ssh_user['state'] | default('present') == 'absent'
+  tags:
+    - user

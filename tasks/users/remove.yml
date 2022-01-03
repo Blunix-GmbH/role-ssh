@@ -6,6 +6,7 @@
   changed_when: "'molecule-notest' not in ansible_skip_tags"
   tags:
     - remove
+    - user
 
 - name: "ssh user {{ ssh_user['name'] }} remove group {{ ssh_user['group'] | default(ssh_user['name']) }}"
   group:
@@ -15,3 +16,4 @@
   changed_when: "'molecule-notest' not in ansible_skip_tags"
   tags:
     - remove
+    - user

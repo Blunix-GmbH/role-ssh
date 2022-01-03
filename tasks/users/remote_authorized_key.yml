@@ -5,9 +5,11 @@
   changed_when: "'molecule-notest' not in ansible_skip_tags"
   tags:
     - authorized_keys
+    - user
 
 - name: "ssh user {{ ssh_user['name'] }} append the remote public key to the list of authorized_keys"
   set_fact:
     fetched_remote_public_keys: "{{ fetched_remote_public_keys + [remote_public_key.stdout] }}"
   tags:
     - authorized_keys
+    - user

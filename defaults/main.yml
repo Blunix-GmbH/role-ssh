@@ -1,1 +1,42 @@
+# /etc/ssh/sshd_config.d/ansible.conf
+ssh_sshd_config_AllowAgentForwarding: "no"
+ssh_sshd_config_AllowGroups: "root admins"
+ssh_sshd_config_AllowTcpForwarding: "no"
+ssh_sshd_config_ChallengeResponseAuthentication: "no"
+ssh_sshd_config_GatewayPorts: "no"
+ssh_sshd_config_GSSAPIAuthentication: "no"
+ssh_sshd_config_HostbasedAuthentication: "no"
+ssh_sshd_config_PasswordAuthentication: "no"
+ssh_sshd_config_PermitEmptyPasswords: "no"
+ssh_sshd_config_PermitRootLogin: "prohibit-password"
+ssh_sshd_config_PermitTunnel: "no"
+ssh_sshd_config_PermitUserEnvironment: "no"
+ssh_sshd_config_PubkeyAuthentication: "yes"
+ssh_sshd_config_X11Forwarding: "no"
+
+ssh_sshd_config:
+  AllowAgentForwarding: "{{ ssh_sshd_config_AllowAgentForwarding }}"
+  AllowGroups: "{{ ssh_sshd_config_AllowGroups }}"
+  AllowTcpForwarding: "{{ ssh_sshd_config_AllowTcpForwarding }}"
+  ChallengeResponseAuthentication: "{{ ssh_sshd_config_ChallengeResponseAuthentication }}"
+  GatewayPorts: "{{ ssh_sshd_config_GatewayPorts }}"
+  GSSAPIAuthentication: "{{ ssh_sshd_config_GSSAPIAuthentication }}"
+  HostbasedAuthentication: "{{ ssh_sshd_config_HostbasedAuthentication }}"
+  PasswordAuthentication: "{{ ssh_sshd_config_PasswordAuthentication }}"
+  PermitEmptyPasswords: "{{ ssh_sshd_config_PermitEmptyPasswords }}"
+  PermitRootLogin: "{{ ssh_sshd_config_PermitRootLogin }}"
+  PermitTunnel: "{{ ssh_sshd_config_PermitTunnel }}"
+  PermitUserEnvironment: "{{ ssh_sshd_config_PermitUserEnvironment }}"
+  PubkeyAuthentication: "{{ ssh_sshd_config_PubkeyAuthentication }}"
+  X11Forwarding: "{{ ssh_sshd_config_X11Forwarding }}"
+
+
+# Will template /etc/ssh/ssh_config.d/ansible.conf
+ssh_ssh_config:
+  "*":
+    SendEnv: "LANG LC_*"
+    HashKnownHosts: "yes"
+    GSSAPIAuthentication: "yes"
+
+
 fetched_remote_public_keys: []

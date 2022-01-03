@@ -4,6 +4,8 @@
     system: "{{ ssh_user['system'] | default(True) }}"
     gid: "{{ ssh_user['gid'] | default(ssh_user['uid']) }}"
   when: ssh_user['create'] | default(False)
+  tags:
+    - user
 
 - name: "ssh user {{ ssh_user['name'] }} create user"
   user:
@@ -16,6 +18,9 @@
     home: "{{ ssh_user['home'] }}"
     shell: "{{ ssh_user['shell'] | default('/bin/bash') }}"
   when: ssh_user['create'] | default(False)
+  tags:
+    - user
+
 
 
 - name: "ssh user {{ ssh_user['name'] }} create ~/.ssh directory"
@@ -25,8 +30,8 @@
     owner: "{{ ssh_user['name'] }}"
     group: "{{ ssh_user['name'] }}"
     mode: 0700
-
-
+  tags:
+    - user
 
 - name: "ssh user {{ ssh_user['name'] }} create directory ~/.bashrc.d/"
   file:
@@ -38,6 +43,7 @@
   when: ssh_user['bashrc'] | default(False)
   tags:
     - bashrc
+    - user
 
 - name: "ssh user {{ ssh_user['name'] }} create ~/.bashrc.d/placeholder.sh"
   copy:
@@ -46,6 +52,8 @@
     group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
     mode: 0700
     content: "# This is a placeholder file"
+  tags:
+    - user
 
 - name: "ssh user {{ ssh_user['name'] }} template ~/.bashrc.d/ files"
   copy:
@@ -60,6 +68,7 @@
   when: ssh_user['bashrc'] | default(False) and ssh_user['bashrc_templates'] is defined
   tags:
     - bashrc
+    - user
 
 - name: "ssh user {{ ssh_user['name'] }} template ~/.bashrc"
   template:
@@ -71,6 +80,7 @@
   when: ssh_user['bashrc'] | default(False)
   tags:
     - bashrc
+    - user
 
 
 
