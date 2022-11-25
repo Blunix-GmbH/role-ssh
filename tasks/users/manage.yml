@@ -182,7 +182,7 @@
 - name: "ssh user {{ ssh_user['name'] }} enforce secure permissions on ~/.ssh/"
   file:
     state: directory
-    dest: "{{ ssh_user['home'] }}/.ssh"
+    path: "{{ ssh_user['home'] }}/.ssh"
     owner: "{{ ssh_user['name'] }}"
     group: "{{ ssh_user['group'] | default(ssh_user['name']) }}"
     mode: 0700
