@@ -188,5 +188,5 @@
     mode: 0700
 
 - name: "ssh user {{ ssh_user['name'] }} enforce secure permissions on ~/.ssh/*"
-  shell: "chmod 0600 {{ ssh_user['home'] }}/.ssh/* warn=False"
+  shell: "chmod 0600 {{ ssh_user['home'] }}/.ssh/*"
   changed_when: "'molecule-notest' not in ansible_skip_tags"
